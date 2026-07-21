@@ -1,7 +1,7 @@
-//! Integration tests for the `gm-quic-h3` backend.
+//! Integration tests for the `dquic-h3` backend.
 //!
-//! These tests exercise the [`gm_quic_h3::H3GmQuicConnector`] and
-//! [`gm_quic_h3::H3GmQuicAcceptor`] against a `tonic` greeter service, both on
+//! These tests exercise the [`dquic_h3::H3DquicConnector`] and
+//! [`dquic_h3::H3DquicAcceptor`] against a `tonic` greeter service, both on
 //! their own and interoperating with the `quinn` backend from `tonic-h3`.
 
 use std::{net::SocketAddr, sync::Arc};
@@ -10,7 +10,7 @@ use h3_util::server::H3Acceptor;
 use tokio_util::sync::CancellationToken;
 
 #[cfg(test)]
-mod gm_quic;
+mod dquic;
 #[cfg(test)]
 mod mix;
 
@@ -54,8 +54,8 @@ pub fn make_test_cert_rustls(
 }
 
 pub fn try_setup_tracing() {
-    // Install the rustls ring crypto provider for gm-quic compatibility
-    // (gm-quic uses rustls 0.23+ which requires explicit provider setup).
+    // Install the rustls ring crypto provider for dquic compatibility
+    // (dquic uses rustls 0.23+ which requires explicit provider setup).
     let _ = rustls::crypto::ring::default_provider().install_default();
 
     let _ = tracing_subscriber::fmt()
@@ -217,42 +217,45 @@ pub fn make_test_quinn_client_endpoint() -> quinn::Endpoint {
     client_endpoint
 }
 
-pub mod gm_quic_util {
+pub mod dquic_util {
     use std::net::SocketAddr;
+    use std::sync::Arc;
 
-    use gm_quic::prelude::{QuicClient, QuicListeners};
-    use gm_quic_h3::H3GmQuicAcceptor;
+    use dquic::prelude::{QuicClient, QuicListeners};
+    use dquic_h3::H3DquicAcceptor;
     use tokio_util::sync::CancellationToken;
 
-    pub fn make_test_gm_quic_client() -> QuicClient {
-        // Create a gm-quic client with no certificate verification (for testing).
+    pub fn make_test_dquic_client() -> Arc<QuicClient> {
+        // Create a dquic client with no certificate verification (for testing).
         // Must set ALPN to "h3" for HTTP/3 protocol negotiation.
-        QuicClient::builder()
-            .without_verifier()
-            .without_cert()
-            .with_alpns(["h3"])
-            .build()
+        // `QuicClient::connect` is invoked on an `Arc<QuicClient>`.
+        Arc::new(
+            QuicClient::builder()
+                .without_verifier()
+                .without_cert()
+                .with_alpns(["h3"])
+                .build(),
+        )
     }
 
-    pub fn run_test_gm_quic_server(
+    pub async fn run_test_dquic_server(
         in_addr: SocketAddr,
         token: CancellationToken,
     ) -> (tokio::task::JoinHandle<()>, SocketAddr) {
-        use gm_quic::prelude::QuicIO;
+        use dquic::prelude::IO;
 
         // Generate test certificates.
-        let (cert_path, key_path) = crate::cert_gen::make_test_cert_files("gm_quic", false);
+        let (cert_path, key_path) = crate::cert_gen::make_test_cert_files("dquic", false);
 
-        // Create gm-quic server listeners.
-        // 1. builder() returns Result
-        // 2. without_client_cert_verifier() configures no client auth
-        // 3. with_alpns() sets the ALPN protocols
-        // 4. listen(backlog) creates the listeners (returns Arc<QuicListeners>)
+        // Create dquic server listeners.
+        // 1. without_client_cert_verifier() configures no client auth
+        // 2. with_alpns() sets the ALPN protocols
+        // 3. listen(backlog) creates the listeners (returns Result<Arc<QuicListeners>>)
         let listeners = QuicListeners::builder()
-            .expect("Failed to create QuicListeners builder")
             .without_client_cert_verifier()
             .with_alpns(["h3"])
-            .listen(8); // backlog size
+            .listen(8) // backlog size
+            .expect("Failed to create QuicListeners");
 
         // Add a server with certificate (virtual host style).
         // BindUri accepts &str, ToCertificate/ToPrivateKey accept &Path.
@@ -264,6 +267,7 @@ pub mod gm_quic_util {
                 [in_addr], // SocketAddr implements Into<BindUri>
                 None::<Vec<u8>>,
             )
+            .await
             .expect("Failed to add server for localhost");
 
         // Get the actual bound address from the server's interface.
@@ -271,19 +275,14 @@ pub mod gm_quic_util {
             let server = listeners.get_server("localhost").expect("Server not found");
             let bind_interfaces = server.bind_interfaces();
             let (_, bind_iface) = bind_interfaces.iter().next().expect("No bound interface");
-            let real_addr = bind_iface
+            bind_iface
                 .borrow()
-                .expect("Failed to borrow interface")
-                .real_addr()
-                .expect("Failed to get real address");
-            match real_addr {
-                gm_quic::prelude::RealAddr::Internet(addr) => addr,
-                _ => panic!("Expected internet address"),
-            }
+                .bound_addr()
+                .expect("Failed to get bound address")
         };
 
         // listen() already returns Arc<QuicListeners>.
-        let acceptor = H3GmQuicAcceptor::new(listeners);
+        let acceptor = H3DquicAcceptor::new(listeners);
         let acceptor_cp = acceptor.clone();
 
         let h_sv = super::run_test_server(acceptor, token);
@@ -292,9 +291,14 @@ pub mod gm_quic_util {
             h_sv.await
                 .expect("cannot join")
                 .expect("tonic server failed");
-            // Shutdown the gm-quic acceptor to release global resources.
+            // Shutdown the dquic acceptor to release global resources.
             acceptor_cp.shutdown().await;
-            tracing::debug!("gm-quic test server ended");
+            // dquic allows only one `QuicListeners` to run at a time globally
+            // (its connectionless packet sink is registered on the global
+            // `QuicRouter`). Draining it releases the sink so the next test can
+            // start a fresh server.
+            dquic::qinterface::component::route::QuicRouter::global().drain_connectless();
+            tracing::debug!("dquic test server ended");
         });
 
         (h, listen_addr)

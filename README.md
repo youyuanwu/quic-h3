@@ -14,11 +14,11 @@ traits.
 
 | Crate | Backend | Status |
 |-------|---------|--------|
-| [`gm-quic-h3`](./gm-quic-h3) | [gm-quic] via [h3-shim] | experimental |
+| [`dquic-h3`](./dquic-h3) | [dquic] via [h3-shim] | experimental |
 
 ## Testing
 
-Integration tests live in `gm-quic-h3-tests` and exercise the backends against a
+Integration tests live in `dquic-h3-tests` and exercise the backends against a
 `tonic` gRPC service, including interop with the `quinn` backend from `tonic-h3`.
 The tests require `protoc` to be installed.
 
@@ -30,7 +30,7 @@ cargo test --all-targets
 
 MIT
 
-[gm-quic]: https://github.com/genmeta/gm-quic
+[dquic]: https://github.com/genmeta/dquic
 [h3-shim]: https://crates.io/crates/h3-shim
 [`h3-util`]: https://crates.io/crates/h3-util
 [`h3_util::client::H3Connector`]: https://docs.rs/h3-util

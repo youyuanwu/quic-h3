@@ -1,0 +1,34 @@
+[package]
+name = "gm-quic-h3-tests"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+gm-quic-h3.workspace = true
+h3-util.workspace = true
+h3-shim.workspace = true
+gm-quic.workspace = true
+
+# quinn is used as a reference backend to exercise interop with gm-quic.
+tonic-h3 = { workspace = true, features = ["quinn"] }
+quinn.workspace = true
+# enable rustls provider linkage
+rustls.workspace = true
+
+hyper.workspace = true
+http.workspace = true
+futures.workspace = true
+tokio = { workspace = true, features = ["full"] }
+tokio-util.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+rcgen.workspace = true
+serial_test.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+prost.workspace = true
+
+[build-dependencies]
+tonic-prost-build.workspace = true

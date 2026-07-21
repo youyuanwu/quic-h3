@@ -1,0 +1,73 @@
+name: build
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  toolchain:
+    runs-on: ubuntu-latest
+    outputs:
+      channel: ${{ steps.read.outputs.channel }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Read rust channel from rust-toolchain.toml
+      id: read
+      run: |
+        channel=$(grep -oP 'channel\s*=\s*"\K[^"]+' rust-toolchain.toml)
+        echo "channel=$channel" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: toolchain
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+        rust: [ "${{ needs.toolchain.outputs.channel }}" ]
+      fail-fast: false
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.10
+      with:
+        version: "v0.10.0"
+
+    - name: Remove toolchain file to avoid conflict with rust cache.
+      run: rm rust-toolchain.toml
+      shell: bash
+
+    - name: Install rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: rustfmt, clippy
+
+    - name: Run Rust cache
+      uses: Swatinem/rust-cache@v2
+
+    # protoc is needed to build the tonic-based integration tests.
+    - uses: taiki-e/install-action@protoc
+
+    - name: Run cargo fmt
+      run: cargo +${{ matrix.rust }} fmt --all -- --check
+
+    - name: Run cargo clippy
+      run: cargo +${{ matrix.rust }} clippy --all-targets -- -D warnings
+
+    - name: Run cargo build
+      run: cargo +${{ matrix.rust }} build --all-targets
+
+    - name: Run rust unittests
+      run: cargo +${{ matrix.rust }} test --all-targets
+
+    - name: Run rust doctests
+      run: cargo +${{ matrix.rust }} test --workspace --doc
+
+    - name: Check crate packaging
+      run: cargo +${{ matrix.rust }} package -p gm-quic-h3 --allow-dirty

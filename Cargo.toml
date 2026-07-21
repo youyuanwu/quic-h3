@@ -1,0 +1,43 @@
+[workspace]
+resolver = "2"
+members = ["gm-quic-h3", "gm-quic-h3-tests"]
+package.edition = "2024"
+
+[workspace.dependencies]
+# h3 core and the h3-util abstraction layer from tonic-h3.
+h3 = { version = "0.0.8" }
+h3-util = { version = "0.0.6", default-features = false }
+
+# gm-quic backend and its h3 shim.
+gm-quic = "0.4.0"
+h3-shim = "0.4.0"
+
+# quinn is used by the tests as a reference backend to exercise interop.
+h3-quinn = "0.0.10"
+quinn = { version = "0.11", default-features = false, features = ["runtime-tokio", "rustls-ring"] }
+
+# tonic-h3 provides the h3 server router and quinn helpers used by the tests.
+tonic-h3 = { version = "0.0.6", default-features = false }
+
+hyper = { version = "1", default-features = false }
+bytes = "1"
+http = "1"
+futures = "0.3"
+tokio = { version = "1", default-features = false }
+tokio-util = "0.7"
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "fmt",
+] }
+
+# test-only dependencies
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "aws_lc_rs", "pem"] }
+rustls = { version = "0.23", default-features = false, features = ["std", "ring"] }
+serial_test = "3"
+tonic = { version = "0.14", default-features = false, features = ["router", "codegen", "transport"] }
+tonic-prost = "0.14"
+tonic-prost-build = "0.14"
+prost = "0.14"
+
+# crates in this workspace
+gm-quic-h3 = { version = "0.0.1", path = "gm-quic-h3" }

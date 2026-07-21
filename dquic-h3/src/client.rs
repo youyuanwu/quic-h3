@@ -1,29 +1,29 @@
 use std::sync::Arc;
 
-use gm_quic::prelude::Connection;
+use dquic::prelude::Connection;
 use hyper::Uri;
 use hyper::body::Bytes;
 
 use h3_util::client::H3Connector;
 
-/// Connector for gm-quic based h3 connections.
+/// Connector for dquic based h3 connections.
 ///
-/// This connector wraps a gm-quic [`Connection`] and implements the
+/// This connector wraps a dquic [`Connection`] and implements the
 /// [`H3Connector`] trait to provide h3 connection capabilities.
 #[derive(Clone)]
-pub struct H3GmQuicConnector {
+pub struct H3DquicConnector {
     uri: Uri,
     server_name: String,
     connection: Arc<Connection>,
 }
 
-impl H3GmQuicConnector {
-    /// Create a new gm-quic connector from an existing QUIC connection.
+impl H3DquicConnector {
+    /// Create a new dquic connector from an existing QUIC connection.
     ///
     /// # Arguments
     /// * `uri` - The URI to connect to
     /// * `server_name` - The server name for TLS
-    /// * `connection` - The underlying gm-quic connection
+    /// * `connection` - The underlying dquic connection
     pub fn new(uri: Uri, server_name: String, connection: Arc<Connection>) -> Self {
         Self {
             uri,
@@ -43,7 +43,7 @@ impl H3GmQuicConnector {
     }
 }
 
-impl H3Connector for H3GmQuicConnector {
+impl H3Connector for H3DquicConnector {
     type CONN = h3_shim::QuicConnection;
     type OS = h3_shim::conn::OpenStreams;
     type SS = h3_shim::streams::SendStream<Bytes>;
@@ -51,10 +51,10 @@ impl H3Connector for H3GmQuicConnector {
     type BS = h3_shim::streams::BidiStream<Bytes>;
 
     async fn connect(&self) -> Result<Self::CONN, h3_util::Error> {
-        tracing::debug!(uri = %self.uri, server_name = %self.server_name, "connecting to gm-quic server");
+        tracing::debug!(uri = %self.uri, server_name = %self.server_name, "connecting to dquic server");
         // Create the h3-shim QuicConnection wrapper.
         let conn = h3_shim::QuicConnection::new(self.connection.clone());
-        tracing::debug!("gm-quic connection established");
+        tracing::debug!("dquic connection established");
         Ok(conn)
     }
 }

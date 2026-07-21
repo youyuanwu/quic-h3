@@ -1,16 +1,16 @@
 [package]
-name = "gm-quic-h3-tests"
+name = "dquic-h3-tests"
 version = "0.1.0"
 edition.workspace = true
 publish = false
 
 [dependencies]
-gm-quic-h3.workspace = true
+dquic-h3.workspace = true
 h3-util.workspace = true
 h3-shim.workspace = true
-gm-quic.workspace = true
+dquic.workspace = true
 
-# quinn is used as a reference backend to exercise interop with gm-quic.
+# quinn is used as a reference backend to exercise interop with dquic.
 tonic-h3 = { workspace = true, features = ["quinn"] }
 quinn.workspace = true
 # enable rustls provider linkage

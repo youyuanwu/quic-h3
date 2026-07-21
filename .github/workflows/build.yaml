@@ -70,4 +70,4 @@ jobs:
       run: cargo +${{ matrix.rust }} test --workspace --doc
 
     - name: Check crate packaging
-      run: cargo +${{ matrix.rust }} package -p gm-quic-h3 --allow-dirty
+      run: cargo +${{ matrix.rust }} package -p dquic-h3 --allow-dirty

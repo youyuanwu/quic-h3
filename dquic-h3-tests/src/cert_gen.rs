@@ -14,7 +14,7 @@ pub fn make_test_cert_files(
 
     // Create a temporary directory.
     let temp_dir = std::env::temp_dir()
-        .join("gm_quic_h3_test_certs")
+        .join("dquic_h3_test_certs")
         .join(test_name);
 
     // remove and regenerate.

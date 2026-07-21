@@ -1,24 +1,24 @@
 use std::sync::Arc;
 
-use gm_quic::prelude::QuicListeners;
+use dquic::prelude::QuicListeners;
 use hyper::body::Bytes;
 
 use h3_util::server::H3Acceptor;
 
-/// Acceptor for gm-quic based h3 connections.
+/// Acceptor for dquic based h3 connections.
 ///
-/// This acceptor wraps a gm-quic [`QuicListeners`] and implements the
+/// This acceptor wraps a dquic [`QuicListeners`] and implements the
 /// [`H3Acceptor`] trait to accept incoming h3 connections.
 #[derive(Clone)]
-pub struct H3GmQuicAcceptor {
+pub struct H3DquicAcceptor {
     listeners: Arc<QuicListeners>,
 }
 
-impl H3GmQuicAcceptor {
-    /// Create a new gm-quic acceptor from a [`QuicListeners`] instance.
+impl H3DquicAcceptor {
+    /// Create a new dquic acceptor from a [`QuicListeners`] instance.
     ///
     /// # Arguments
-    /// * `listeners` - The gm-quic listeners that will accept incoming connections
+    /// * `listeners` - The dquic listeners that will accept incoming connections
     pub fn new(listeners: Arc<QuicListeners>) -> Self {
         Self { listeners }
     }
@@ -38,7 +38,7 @@ impl H3GmQuicAcceptor {
     }
 }
 
-impl H3Acceptor for H3GmQuicAcceptor {
+impl H3Acceptor for H3DquicAcceptor {
     type CONN = h3_shim::QuicConnection;
     type OS = h3_shim::conn::OpenStreams;
     type SS = h3_shim::streams::SendStream<Bytes>;
@@ -48,13 +48,13 @@ impl H3Acceptor for H3GmQuicAcceptor {
     async fn accept(&mut self) -> Result<Option<Self::CONN>, h3_util::Error> {
         match self.listeners.accept().await {
             Ok((new_conn, _server, _pathway, _link)) => {
-                tracing::debug!("gm-quic accepted new connection");
-                let conn = h3_shim::QuicConnection::new(Arc::new(new_conn));
+                tracing::debug!("dquic accepted new connection");
+                let conn = h3_shim::QuicConnection::new(new_conn);
                 Ok(Some(conn))
             }
             Err(e) => {
-                tracing::debug!("gm-quic accept error: {:?}", e);
-                Err(format!("gm-quic accept error: {:?}", e).into())
+                tracing::debug!("dquic accept error: {:?}", e);
+                Err(format!("dquic accept error: {:?}", e).into())
             }
         }
     }

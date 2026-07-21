@@ -8,8 +8,19 @@ use tonic::transport::Uri;
 use tokio_util::sync::CancellationToken;
 
 /// Test dquic server with quinn client.
+///
+/// Ignored: the quinn client cannot currently interoperate with a dquic server.
+/// After the TLS handshake completes, the quinn client discards the dquic
+/// server's 1-RTT packets (`discarding unexpected Data packet` /
+/// `routine key update due to phase exhaustion` in quinn-proto), so no
+/// application data flows and the dquic server drops the path with
+/// "Path has been idle for too long". This is an upstream dquic <-> quinn
+/// incompatibility (https://github.com/genmeta/dquic); re-enable once fixed.
+/// Note the reverse direction (dquic client -> quinn server) works, see
+/// `quinn_server_dquic_client_test`.
 #[tokio::test]
 #[serial(dquic)]
+#[ignore = "dquic server <-> quinn client interop is broken upstream (genmeta/dquic)"]
 async fn dquic_server_quinn_client_test() {
     crate::try_setup_tracing();
 

@@ -9,7 +9,7 @@ h3 = { version = "0.0.8" }
 h3-util = { version = "0.0.6", default-features = false }
 
 # dquic backend and its h3 shim.
-dquic = "0.5"
+dquic = "0.6"
 h3-shim = "0.5"
 
 # quinn is used by the tests as a reference backend to exercise interop.

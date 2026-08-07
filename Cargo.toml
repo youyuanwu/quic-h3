@@ -9,7 +9,7 @@ h3 = { version = "0.0.8" }
 h3-util = { version = "0.0.6", default-features = false }
 
 # dquic backend and its h3 shim.
-dquic = "0.5"
+dquic = "0.7"
 h3-shim = "0.5"
 
 # quinn is used by the tests as a reference backend to exercise interop.
@@ -33,7 +33,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 # test-only dependencies
 rcgen = { version = "0.14", default-features = false, features = ["crypto", "aws_lc_rs", "pem"] }
 rustls = { version = "0.23", default-features = false, features = ["std", "ring"] }
-serial_test = "3"
+serial_test = "4"
 tonic = { version = "0.14", default-features = false, features = ["router", "codegen", "transport"] }
 tonic-prost = "0.14"
 tonic-prost-build = "0.14"

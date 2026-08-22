@@ -11,7 +11,7 @@ jobs:
     outputs:
       channel: ${{ steps.read.outputs.channel }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Read rust channel from rust-toolchain.toml
       id: read
       run: |
@@ -31,10 +31,10 @@ jobs:
       RUSTC_WRAPPER: "sccache"
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.10
+      uses: mozilla-actions/sccache-action@v0.0.11
       with:
         version: "v0.10.0"
 

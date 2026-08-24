@@ -69,5 +69,5 @@ jobs:
     - name: Run rust doctests
       run: cargo +${{ matrix.rust }} test --workspace --doc
 
-    - name: Check crate packaging
-      run: cargo +${{ matrix.rust }} package -p dquic-h3 --allow-dirty
+    # `cargo package` requires every dependency version to exist on crates.io.
+    # Restore the packaging check after h3-shim 0.5.1 is published.

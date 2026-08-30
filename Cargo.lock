@@ -1421,6 +1421,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a9c109d3dd08d8a683454c669206d43bb1ce244d035e7672de90ee22200dc4b"
 dependencies = [
  "ngnet-quic-sys",
+ "tokio",
 ]
 
 [[package]]
@@ -1431,11 +1432,12 @@ checksum = "4641e07e1434cfaee7cb1fda154c0cbe06052de207364f7dd13030d2e17a3597"
 dependencies = [
  "bindgen",
  "cmake",
+ "pkg-config",
 ]
 
 [[package]]
 name = "ngtcp2-h3"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "bytes",
  "h3",

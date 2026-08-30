@@ -8,9 +8,7 @@ use std::{
 use bytes::{Buf, Bytes};
 use h3::{
     error::Code,
-    quic::{
-        self, ConnectionErrorIncoming, StreamErrorIncoming, StreamId as H3StreamId, WriteBuf,
-    },
+    quic::{self, ConnectionErrorIncoming, StreamErrorIncoming, StreamId as H3StreamId, WriteBuf},
 };
 use ngnet_quic::{
     ApplicationErrorCode, CloseReason, Directionality, ErrorKind, ExpiryOutcome, Initiator,
@@ -62,7 +60,9 @@ impl<S: Session> Inner<S> {
 
     fn connection_error(&self) -> ConnectionErrorIncoming {
         self.closed.clone().unwrap_or_else(|| {
-            ConnectionErrorIncoming::InternalError("the QUIC connection is closed".into())
+            ConnectionErrorIncoming::Undefined(Arc::new(BridgeError(
+                "the QUIC connection is closed",
+            )))
         })
     }
 
@@ -85,9 +85,9 @@ impl<S: Session> Inner<S> {
                     error_code: code.get(),
                 },
                 CloseReason::IdleTimeout => ConnectionErrorIncoming::Timeout,
-                _ => ConnectionErrorIncoming::InternalError(
-                    "the QUIC transport closed the connection".into(),
-                ),
+                _ => ConnectionErrorIncoming::Undefined(Arc::new(BridgeError(
+                    "the QUIC transport closed the connection",
+                ))),
             }
         });
         self.detached.release();
@@ -153,7 +153,8 @@ impl<S: Session> Inner<S> {
         let now = self.detached.now();
         while let Some(datagram) = self.detached.next_inbound() {
             match self.detached.conn.read_pkt(&datagram, now) {
-                Ok(ReadOutcome::Processed | ReadOutcome::SendRetry | ReadOutcome::DropSilently) => {}
+                Ok(ReadOutcome::Processed | ReadOutcome::SendRetry | ReadOutcome::DropSilently) => {
+                }
                 Ok(ReadOutcome::Draining | ReadOutcome::Closing) => {
                     self.mark_closed(false);
                     break;
@@ -167,7 +168,12 @@ impl<S: Session> Inner<S> {
             return Err(self.connection_error());
         }
 
-        if self.detached.conn.expiry().is_some_and(|expiry| expiry <= now) {
+        if self
+            .detached
+            .conn
+            .expiry()
+            .is_some_and(|expiry| expiry <= now)
+        {
             match self.detached.conn.handle_expiry(now) {
                 Ok(ExpiryOutcome::Handled) => {}
                 Ok(ExpiryOutcome::IdleClose) => self.mark_closed(true),
@@ -287,9 +293,9 @@ impl<S: Session> Inner<S> {
             datagram.truncate(len);
             self.detached.send(datagram);
         }
-        self.closed = Some(ConnectionErrorIncoming::InternalError(
-            "the QUIC connection was closed locally".into(),
-        ));
+        self.closed = Some(ConnectionErrorIncoming::Undefined(Arc::new(BridgeError(
+            "the QUIC connection was closed locally",
+        ))));
         self.detached.release();
     }
 }
@@ -304,7 +310,9 @@ struct Shared<S: Session>(Mutex<Inner<S>>);
 
 impl<S: Session> Shared<S> {
     fn lock(&self) -> MutexGuard<'_, Inner<S>> {
-        self.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.0
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 }
 
@@ -350,10 +358,11 @@ impl<S: Session> quic::Connection<Bytes> for Ngtcp2Connection<S> {
         cx: &mut Context<'_>,
     ) -> Poll<Result<Self::RecvStream, ConnectionErrorIncoming>> {
         let mut inner = self.shared.lock();
-        inner.drive(cx)?;
+        let driven = inner.drive(cx);
         if let Some(stream) = inner.incoming_uni.pop_front() {
             return Poll::Ready(Ok(RecvStream::new(Arc::clone(&self.shared), stream)));
         }
+        driven?;
         Poll::Pending
     }
 
@@ -362,10 +371,11 @@ impl<S: Session> quic::Connection<Bytes> for Ngtcp2Connection<S> {
         cx: &mut Context<'_>,
     ) -> Poll<Result<Self::BidiStream, ConnectionErrorIncoming>> {
         let mut inner = self.shared.lock();
-        inner.drive(cx)?;
+        let driven = inner.drive(cx);
         if let Some(stream) = inner.incoming_bidi.pop_front() {
             return Poll::Ready(Ok(BidiStream::new(Arc::clone(&self.shared), stream)));
         }
+        driven?;
         Poll::Pending
     }
 
@@ -445,11 +455,9 @@ fn poll_open<S: Session>(
     bidi: bool,
 ) -> Poll<Result<StreamId, StreamErrorIncoming>> {
     let mut inner = shared.lock();
-    inner
-        .drive(cx)
-        .map_err(|connection_error| StreamErrorIncoming::ConnectionErrorIncoming {
-            connection_error,
-        })?;
+    inner.drive(cx).map_err(
+        |connection_error| StreamErrorIncoming::ConnectionErrorIncoming { connection_error },
+    )?;
     let opened = if bidi {
         inner.detached.conn.open_bidi_stream()
     } else {
@@ -482,11 +490,9 @@ impl<S: Session> SendStream<S> {
 
     fn poll_write(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), StreamErrorIncoming>> {
         let mut inner = self.shared.lock();
-        inner
-            .drive(cx)
-            .map_err(|connection_error| StreamErrorIncoming::ConnectionErrorIncoming {
-                connection_error,
-            })?;
+        inner.drive(cx).map_err(|connection_error| {
+            StreamErrorIncoming::ConnectionErrorIncoming { connection_error }
+        })?;
 
         for _ in 0..MAX_DATAGRAMS_PER_POLL {
             let Some(writing) = self.writing.as_mut() else {
@@ -495,6 +501,10 @@ impl<S: Session> SendStream<S> {
             if !writing.has_remaining() {
                 self.writing = None;
                 return Poll::Ready(Ok(()));
+            }
+            if !inner.detached.outbound_has_room() {
+                inner.poll_timer(cx);
+                return Poll::Pending;
             }
             match inner.send_chunk(self.stream, writing.chunk(), false)? {
                 StreamWrite::Datagram { accepted, .. } => writing.advance(accepted),
@@ -513,17 +523,11 @@ impl<S: Session> SendStream<S> {
 }
 
 impl<S: Session> quic::SendStream<Bytes> for SendStream<S> {
-    fn poll_ready(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), StreamErrorIncoming>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), StreamErrorIncoming>> {
         self.poll_write(cx)
     }
 
-    fn send_data<T: Into<WriteBuf<Bytes>>>(
-        &mut self,
-        data: T,
-    ) -> Result<(), StreamErrorIncoming> {
+    fn send_data<T: Into<WriteBuf<Bytes>>>(&mut self, data: T) -> Result<(), StreamErrorIncoming> {
         if self.writing.is_some() {
             return Err(StreamErrorIncoming::ConnectionErrorIncoming {
                 connection_error: ConnectionErrorIncoming::InternalError(
@@ -540,10 +544,7 @@ impl<S: Session> quic::SendStream<Bytes> for SendStream<S> {
         Ok(())
     }
 
-    fn poll_finish(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), StreamErrorIncoming>> {
+    fn poll_finish(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), StreamErrorIncoming>> {
         if self.finished {
             return Poll::Ready(Ok(()));
         }
@@ -555,11 +556,13 @@ impl<S: Session> quic::SendStream<Bytes> for SendStream<S> {
         }
 
         let mut inner = self.shared.lock();
-        inner
-            .drive(cx)
-            .map_err(|connection_error| StreamErrorIncoming::ConnectionErrorIncoming {
-                connection_error,
-            })?;
+        inner.drive(cx).map_err(|connection_error| {
+            StreamErrorIncoming::ConnectionErrorIncoming { connection_error }
+        })?;
+        if !inner.detached.outbound_has_room() {
+            inner.poll_timer(cx);
+            return Poll::Pending;
+        }
         match inner.send_chunk(self.stream, &[], true)? {
             StreamWrite::Datagram { .. } => {
                 self.finished = true;
@@ -618,34 +621,37 @@ impl<S: Session> quic::RecvStream for RecvStream<S> {
             return Poll::Ready(Ok(None));
         }
         let mut inner = self.shared.lock();
-        inner
-            .drive(cx)
-            .map_err(|connection_error| StreamErrorIncoming::ConnectionErrorIncoming {
-                connection_error,
-            })?;
-
-        let state = inner.receive.entry(self.stream.get()).or_default();
-        if let Some(bytes) = state.chunks.pop_front() {
+        let driven = inner.drive(cx);
+        let (bytes, reset, finished) = {
+            let state = inner.receive.entry(self.stream.get()).or_default();
+            (state.chunks.pop_front(), state.reset, state.finished)
+        };
+        if let Some(bytes) = bytes {
             let consumed = bytes.len() as u64;
-            inner
-                .detached
-                .conn
-                .extend_max_stream_offset(self.stream, consumed)
-                .map_err(stream_error)?;
-            inner.detached.conn.extend_max_offset(consumed);
-            inner.produce().map_err(|connection_error| {
-                StreamErrorIncoming::ConnectionErrorIncoming { connection_error }
-            })?;
+            if driven.is_ok() {
+                inner
+                    .detached
+                    .conn
+                    .extend_max_stream_offset(self.stream, consumed)
+                    .map_err(stream_error)?;
+                inner.detached.conn.extend_max_offset(consumed);
+                inner.produce().map_err(|connection_error| {
+                    StreamErrorIncoming::ConnectionErrorIncoming { connection_error }
+                })?;
+            }
             return Poll::Ready(Ok(Some(bytes)));
         }
-        if let Some(error_code) = state.reset {
+        if let Some(error_code) = reset {
             self.finished = true;
             return Poll::Ready(Err(StreamErrorIncoming::StreamTerminated { error_code }));
         }
-        if state.finished {
+        if finished {
             self.finished = true;
             return Poll::Ready(Ok(None));
         }
+        driven.map_err(
+            |connection_error| StreamErrorIncoming::ConnectionErrorIncoming { connection_error },
+        )?;
         Poll::Pending
     }
 
@@ -688,24 +694,15 @@ impl<S: Session> quic::BidiStream<Bytes> for BidiStream<S> {
 }
 
 impl<S: Session> quic::SendStream<Bytes> for BidiStream<S> {
-    fn poll_ready(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), StreamErrorIncoming>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), StreamErrorIncoming>> {
         quic::SendStream::<Bytes>::poll_ready(&mut self.send, cx)
     }
 
-    fn send_data<T: Into<WriteBuf<Bytes>>>(
-        &mut self,
-        data: T,
-    ) -> Result<(), StreamErrorIncoming> {
+    fn send_data<T: Into<WriteBuf<Bytes>>>(&mut self, data: T) -> Result<(), StreamErrorIncoming> {
         quic::SendStream::<Bytes>::send_data(&mut self.send, data)
     }
 
-    fn poll_finish(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), StreamErrorIncoming>> {
+    fn poll_finish(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), StreamErrorIncoming>> {
         quic::SendStream::<Bytes>::poll_finish(&mut self.send, cx)
     }
 
@@ -758,16 +755,15 @@ impl std::fmt::Display for BridgeError {
 
 impl std::error::Error for BridgeError {}
 
-trait PollResultExt<T, E> {
-    fn map_ok<U>(self, map: impl FnOnce(T) -> U) -> Poll<Result<U, E>>;
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl<T, E> PollResultExt<T, E> for Poll<Result<T, E>> {
-    fn map_ok<U>(self, map: impl FnOnce(T) -> U) -> Poll<Result<U, E>> {
-        match self {
-            Poll::Ready(Ok(value)) => Poll::Ready(Ok(map(value))),
-            Poll::Ready(Err(error)) => Poll::Ready(Err(error)),
-            Poll::Pending => Poll::Pending,
+    #[test]
+    fn stream_ids_keep_their_wire_value() {
+        for value in [0, 1, 2, 3, 1 << 20, (1_i64 << 62) - 1] {
+            let stream = StreamId::new(value).expect("valid QUIC stream ID");
+            assert_eq!(h3_stream(stream), (value as u64).try_into().unwrap());
         }
     }
 }

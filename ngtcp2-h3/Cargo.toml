@@ -10,8 +10,13 @@ license = "MIT"
 categories = ["web-programming", "network-programming"]
 keywords = ["http", "h3", "quic", "ngtcp2"]
 
+[features]
+default = []
+tls-ossl = ["ngnet-quic/tls-ossl"]
+tokio = ["ngnet-quic/tokio"]
+
 [dependencies]
 bytes.workspace = true
-h3.workspace = true
+h3 = { workspace = true, features = ["i-implement-a-third-party-backend-and-opt-into-breaking-changes"] }
 h3-util.workspace = true
 ngnet-quic.workspace = true

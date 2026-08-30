@@ -13,7 +13,9 @@ Build the underlying endpoint with
 `EndpointBuilder::build_detachable` and keep its driver running for the lifetime
 of every HTTP/3 connection.
 
-The native `ngnet-quic` dependencies require a C compiler, CMake, and libclang.
+Enable the `tokio` feature for `ngnet-quic`'s ready-made Tokio socket and clock.
+Enable `tls-ossl` for its OpenSSL TLS backend. The native dependencies require a
+C compiler, CMake, libclang, and (for `tls-ossl`) OpenSSL 3.5 or newer.
 
 ## License
 

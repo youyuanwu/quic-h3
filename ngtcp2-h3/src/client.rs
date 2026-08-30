@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 
-use bytes::Bytes;
 use h3_util::client::H3Connector;
 use ngnet_quic::{Session, endpoint::Endpoint};
 
@@ -15,11 +14,7 @@ pub struct H3Ngtcp2Connector<S: Session> {
 
 impl<S: Session> H3Ngtcp2Connector<S> {
     /// Creates a connector for `remote`.
-    pub fn new(
-        endpoint: Endpoint<S>,
-        remote: SocketAddr,
-        server_name: Option<String>,
-    ) -> Self {
+    pub fn new(endpoint: Endpoint<S>, remote: SocketAddr, server_name: Option<String>) -> Self {
         Self {
             endpoint,
             remote,
@@ -64,11 +59,3 @@ impl<S: Session> H3Connector for H3Ngtcp2Connector<S> {
         Ok(Ngtcp2Connection::client(detached))
     }
 }
-
-const _: fn() = || {
-    fn check<S: Session>()
-    where
-        Ngtcp2Connection<S>: h3::quic::Connection<Bytes>,
-    {
-    }
-};

@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use h3_util::server::H3Acceptor;
 use ngnet_quic::{Session, endpoint::Endpoint};
 
@@ -45,11 +44,3 @@ impl<S: Session> H3Acceptor for H3Ngtcp2Acceptor<S> {
         Ok(Some(Ngtcp2Connection::server(detached)))
     }
 }
-
-const _: fn() = || {
-    fn check<S: Session>()
-    where
-        Ngtcp2Connection<S>: h3::quic::Connection<Bytes>,
-    {
-    }
-};

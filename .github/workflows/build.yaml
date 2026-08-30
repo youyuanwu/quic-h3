@@ -14,6 +14,7 @@ jobs:
       fail-fast: false
     env:
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_GHA_RW_MODE: ${{ github.ref == 'refs/heads/main' && 'READ_WRITE' || 'READ_ONLY' }}
       RUSTC_WRAPPER: "sccache"
 
     steps:
@@ -29,6 +30,7 @@ jobs:
       with:
         components: rustfmt, clippy
         cache: true
+        cache-save-if: ${{ github.ref == 'refs/heads/main' }}
         rustflags: ""
 
     # protoc is needed to build the tonic-based integration tests.

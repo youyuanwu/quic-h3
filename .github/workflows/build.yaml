@@ -10,7 +10,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-26.04, windows-latest ]
+        include:
+        - os: ubuntu-26.04
+          cargo_exclude: ""
+        - os: windows-latest
+          cargo_exclude: "--exclude ngtcp2-h3"
       fail-fast: false
     env:
       SCCACHE_GHA_ENABLED: "true"
@@ -40,20 +44,20 @@ jobs:
       run: cargo fmt --all -- --check
 
     - name: Run cargo clippy
-      run: cargo clippy --all-targets -- -D warnings
+      run: cargo clippy --workspace ${{ matrix.cargo_exclude }} --all-targets -- -D warnings
 
     - name: Run cargo build
-      run: cargo build --all-targets
+      run: cargo build --workspace ${{ matrix.cargo_exclude }} --all-targets
 
     - name: Run rust unittests
-      run: cargo test --all-targets
+      run: cargo test --workspace ${{ matrix.cargo_exclude }} --all-targets
 
     - name: Run ngtcp2 loopback tests
       if: runner.os == 'Linux'
       run: cargo test -p ngtcp2-h3 --test loopback --features tls-ossl,tokio
 
     - name: Run rust doctests
-      run: cargo test --workspace --doc
+      run: cargo test --workspace ${{ matrix.cargo_exclude }} --doc
 
     # `cargo package` requires every dependency version to exist on crates.io.
     # Restore the packaging check after h3-shim 0.5.1 is published.

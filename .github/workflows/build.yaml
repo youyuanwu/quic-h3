@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-26.04, windows-latest ]
       fail-fast: false
     env:
       SCCACHE_GHA_ENABLED: "true"
@@ -47,6 +47,10 @@ jobs:
 
     - name: Run rust unittests
       run: cargo test --all-targets
+
+    - name: Run ngtcp2 loopback tests
+      if: runner.os == 'Linux'
+      run: cargo test -p ngtcp2-h3 --test loopback --features tls-ossl,tokio
 
     - name: Run rust doctests
       run: cargo test --workspace --doc

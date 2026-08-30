@@ -1441,8 +1441,13 @@ version = "0.0.1"
 dependencies = [
  "bytes",
  "h3",
+ "h3-quinn",
  "h3-util",
+ "http",
  "ngnet-quic",
+ "quinn",
+ "rcgen",
+ "tokio",
 ]
 
 [[package]]

@@ -20,3 +20,14 @@ bytes.workspace = true
 h3 = { workspace = true, features = ["i-implement-a-third-party-backend-and-opt-into-breaking-changes"] }
 h3-util.workspace = true
 ngnet-quic.workspace = true
+
+[dev-dependencies]
+h3-quinn.workspace = true
+http.workspace = true
+quinn.workspace = true
+rcgen.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
+[[test]]
+name = "loopback"
+required-features = ["tls-ossl", "tokio"]

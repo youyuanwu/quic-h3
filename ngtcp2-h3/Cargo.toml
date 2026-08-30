@@ -15,15 +15,13 @@ default = []
 tls-ossl = ["ngnet-quic/tls-ossl"]
 tokio = ["ngnet-quic/tokio"]
 
-[dependencies]
+[target.'cfg(not(windows))'.dependencies]
 bytes.workspace = true
 h3 = { workspace = true, features = ["i-implement-a-third-party-backend-and-opt-into-breaking-changes"] }
 h3-util.workspace = true
-
-[target.'cfg(not(windows))'.dependencies]
 ngnet-quic.workspace = true
 
-[dev-dependencies]
+[target.'cfg(not(windows))'.dev-dependencies]
 h3-quinn.workspace = true
 http.workspace = true
 quinn.workspace = true

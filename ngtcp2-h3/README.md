@@ -3,6 +3,8 @@
 An [`ngnet-quic`] backend for [`h3-util`], enabling HTTP/3 users such as
 [`tonic-h3`] and [`axum-h3`] to run over ngtcp2.
 
+Windows is not supported. The crate builds there but exposes no API.
+
 The crate implements the `h3::quic` transport traits and provides:
 
 - `H3Ngtcp2Connector` for outbound connections.

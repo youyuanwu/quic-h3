@@ -1,0 +1,17 @@
+[package]
+name = "ngtcp2-h3"
+version = "0.0.1"
+edition.workspace = true
+authors = ["youyuanwu@outlook.com"]
+description = "ngtcp2 backend for h3-util (HTTP/3), powered by ngnet-quic"
+repository = "https://github.com/youyuanwu/quic-h3"
+readme = "./README.md"
+license = "MIT"
+categories = ["web-programming", "network-programming"]
+keywords = ["http", "h3", "quic", "ngtcp2"]
+
+[dependencies]
+bytes.workspace = true
+h3.workspace = true
+h3-util.workspace = true
+ngnet-quic.workspace = true

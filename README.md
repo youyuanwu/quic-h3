@@ -15,6 +15,7 @@ traits.
 | Crate | Backend | Status |
 |-------|---------|--------|
 | [`dquic-h3`](./dquic-h3) | [dquic] via [h3-shim] | experimental |
+| [`ngtcp2-h3`](./ngtcp2-h3) | [ngtcp2] via [`ngnet-quic`] | experimental |
 
 ## Testing
 
@@ -31,6 +32,8 @@ cargo test --all-targets
 MIT
 
 [dquic]: https://github.com/genmeta/dquic
+[ngtcp2]: https://github.com/ngtcp2/ngtcp2
+[`ngnet-quic`]: https://crates.io/crates/ngnet-quic
 [h3-shim]: https://crates.io/crates/h3-shim
 [`h3-util`]: https://crates.io/crates/h3-util
 [`h3_util::client::H3Connector`]: https://docs.rs/h3-util

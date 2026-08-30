@@ -735,7 +735,8 @@ impl<S: Session> quic::RecvStream for BidiStream<S> {
 }
 
 fn h3_stream(stream: StreamId) -> H3StreamId {
-    (stream.get() as u64)
+    u64::try_from(stream.get())
+        .expect("a valid QUIC stream ID is non-negative")
         .try_into()
         .expect("a valid QUIC stream ID is a valid h3 stream ID")
 }

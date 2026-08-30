@@ -1,12 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["dquic-h3", "dquic-h3-tests"]
+members = ["dquic-h3", "dquic-h3-tests", "ngtcp2-h3"]
 package.edition = "2024"
 
 [workspace.dependencies]
 # h3 core and the h3-util abstraction layer from tonic-h3.
 h3 = { version = "0.0.8" }
 h3-util = { version = "0.0.6", default-features = false }
+ngnet-quic = { version = "0.0.1", default-features = false, features = ["endpoint"] }
 
 # dquic backend and its h3 shim.
 # h3-shim 0.5.1 is not yet published, so use the matching dquic release tag.
@@ -42,3 +43,4 @@ prost = "0.14"
 
 # crates in this workspace
 dquic-h3 = { version = "0.0.1", path = "dquic-h3" }
+ngtcp2-h3 = { version = "0.0.1", path = "ngtcp2-h3" }

@@ -1,0 +1,33 @@
+[package]
+name = "ngtcp2-h3"
+version = "0.0.1"
+edition.workspace = true
+authors = ["youyuanwu@outlook.com"]
+description = "ngtcp2 backend for h3-util (HTTP/3), powered by ngnet-quic"
+repository = "https://github.com/youyuanwu/quic-h3"
+readme = "./README.md"
+license = "MIT"
+categories = ["web-programming", "network-programming"]
+keywords = ["http", "h3", "quic", "ngtcp2"]
+
+[features]
+default = []
+tls-ossl = ["ngnet-quic/tls-ossl"]
+tokio = ["ngnet-quic/tokio"]
+
+[target.'cfg(not(windows))'.dependencies]
+bytes.workspace = true
+h3 = { workspace = true, features = ["i-implement-a-third-party-backend-and-opt-into-breaking-changes"] }
+h3-util.workspace = true
+ngnet-quic.workspace = true
+
+[target.'cfg(not(windows))'.dev-dependencies]
+h3-quinn.workspace = true
+http.workspace = true
+quinn.workspace = true
+rcgen.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
+[[test]]
+name = "loopback"
+required-features = ["tls-ossl", "tokio"]

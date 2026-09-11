@@ -26,7 +26,7 @@ jobs:
         version: "v0.10.0"
 
     - name: Install Rust and configure cache
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v2
       with:
         components: rustfmt, clippy
         cache: true

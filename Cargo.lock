@@ -625,8 +625,25 @@ dependencies = [
  "arc-swap",
  "dashmap",
  "futures",
- "qconnection",
- "qresolve",
+ "qconnection 0.8.1",
+ "qresolve 0.8.0",
+ "rustls",
+ "thiserror 2.0.19",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "dquic"
+version = "0.7.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "arc-swap",
+ "dashmap",
+ "futures",
+ "qconnection 0.8.2",
+ "qresolve 0.8.1",
  "rustls",
  "thiserror 2.0.19",
  "tokio",
@@ -639,7 +656,7 @@ name = "dquic-h3"
 version = "0.0.1"
 dependencies = [
  "bytes",
- "dquic",
+ "dquic 0.7.1",
  "h3-shim",
  "h3-util",
  "hyper",
@@ -651,7 +668,7 @@ dependencies = [
 name = "dquic-h3-tests"
 version = "0.1.0"
 dependencies = [
- "dquic",
+ "dquic 0.7.1",
  "dquic-h3",
  "futures",
  "h3-shim",
@@ -716,7 +733,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -937,10 +954,10 @@ dependencies = [
 [[package]]
 name = "h3-shim"
 version = "0.5.1"
-source = "git+https://github.com/genmeta/dquic?tag=v0.7.1#207d0bc0f4f8d9e232de5b354df5ff918ae8cbf5"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
 dependencies = [
  "bytes",
- "dquic",
+ "dquic 0.7.2",
  "futures",
  "h3",
  "tokio",
@@ -1375,13 +1392,37 @@ dependencies = [
  "libc",
  "mac-addr",
  "ndk-context",
- "netlink-packet-core",
- "netlink-packet-route",
- "netlink-sys",
+ "netlink-packet-core 0.8.1",
+ "netlink-packet-route 0.31.0",
+ "netlink-sys 0.8.8",
  "objc2",
  "objc2-core-foundation",
  "objc2-core-wlan",
  "objc2-foundation",
+ "objc2-system-configuration",
+ "once_cell",
+ "plist",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "netdev"
+version = "0.46.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3c52c2584961c68f5a6e3356797344061f818c93b8acc9cd6d7e284795e563e"
+dependencies = [
+ "block2",
+ "dispatch2",
+ "dlopen2",
+ "ipnet",
+ "jni",
+ "libc",
+ "mac-addr",
+ "ndk-context",
+ "netlink-packet-core 0.9.0",
+ "netlink-packet-route 0.33.0",
+ "netlink-sys 0.9.0",
+ "objc2-core-foundation",
  "objc2-system-configuration",
  "once_cell",
  "plist",
@@ -1398,6 +1439,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "netlink-packet-core"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d6e2daf9a8c2e21302714706860a0e6be02e03d17294ecc66b354ea7d4059dd"
+
+[[package]]
 name = "netlink-packet-route"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1406,7 +1453,20 @@ dependencies = [
  "bitflags",
  "libc",
  "log",
- "netlink-packet-core",
+ "netlink-packet-core 0.8.1",
+]
+
+[[package]]
+name = "netlink-packet-route"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59d48ffc8b73a506e1ff0878528c72668f2bfbc3d875b6be890a96be5d0d5576"
+dependencies = [
+ "bitflags",
+ "libc",
+ "log",
+ "netlink-packet-core 0.9.0",
+ "zerocopy",
 ]
 
 [[package]]
@@ -1414,6 +1474,17 @@ name = "netlink-sys"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd6c30ed10fa69cc491d491b85cc971f6bdeb8e7367b7cde2ee6cc878d583fae"
+dependencies = [
+ "bytes",
+ "libc",
+ "log",
+]
+
+[[package]]
+name = "netlink-sys"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c99d38e00b420df49e940fe0826e667c3dad82ac68eb4c2bbf754c1c14a83a10"
 dependencies = [
  "bytes",
  "libc",
@@ -1833,7 +1904,29 @@ dependencies = [
  "futures",
  "getset",
  "nom 8.0.0",
- "qmacro",
+ "qmacro 0.5.1 (git+https://github.com/genmeta/dquic?tag=v0.7.1)",
+ "rand",
+ "rustls",
+ "serde",
+ "smallvec",
+ "thiserror 2.0.19",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "qbase"
+version = "0.6.4"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bitflags",
+ "bytes",
+ "derive_more",
+ "enum_dispatch",
+ "futures",
+ "getset",
+ "nom 8.0.0",
+ "qmacro 0.5.1 (git+https://github.com/genmeta/dquic?tag=v0.7.2)",
  "rand",
  "rustls",
  "serde",
@@ -1848,8 +1941,21 @@ name = "qcongestion"
 version = "0.6.1"
 source = "git+https://github.com/genmeta/dquic?tag=v0.7.1#207d0bc0f4f8d9e232de5b354df5ff918ae8cbf5"
 dependencies = [
- "qbase",
- "qevent",
+ "qbase 0.6.3",
+ "qevent 0.6.1",
+ "rand",
+ "thiserror 2.0.19",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "qcongestion"
+version = "0.6.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "qbase 0.6.4",
+ "qevent 0.6.2",
  "rand",
  "thiserror 2.0.19",
  "tokio",
@@ -1866,14 +1972,42 @@ dependencies = [
  "derive_more",
  "enum_dispatch",
  "futures",
- "qbase",
- "qcongestion",
- "qdatagram",
- "qevent",
- "qinterface",
- "qrecovery",
- "qresolve",
- "qtraversal",
+ "qbase 0.6.3",
+ "qcongestion 0.6.1",
+ "qdatagram 0.6.1",
+ "qevent 0.6.1",
+ "qinterface 0.7.1",
+ "qrecovery 0.6.1",
+ "qresolve 0.8.0",
+ "qtraversal 0.7.1",
+ "rand",
+ "ring",
+ "rustls",
+ "thiserror 2.0.19",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "x509-parser",
+]
+
+[[package]]
+name = "qconnection"
+version = "0.8.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bytes",
+ "dashmap",
+ "derive_more",
+ "enum_dispatch",
+ "futures",
+ "qbase 0.6.4",
+ "qcongestion 0.6.2",
+ "qdatagram 0.6.2",
+ "qevent 0.6.2",
+ "qinterface 0.7.2",
+ "qrecovery 0.6.2",
+ "qresolve 0.8.1",
+ "qtraversal 0.7.2",
  "rand",
  "ring",
  "rustls",
@@ -1890,7 +2024,18 @@ version = "0.6.1"
 source = "git+https://github.com/genmeta/dquic?tag=v0.7.1#207d0bc0f4f8d9e232de5b354df5ff918ae8cbf5"
 dependencies = [
  "bytes",
- "qbase",
+ "qbase 0.6.3",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "qdatagram"
+version = "0.6.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bytes",
+ "qbase 0.6.4",
  "tokio",
  "tracing",
 ]
@@ -1905,7 +2050,25 @@ dependencies = [
  "derive_more",
  "enum_dispatch",
  "pin-project-lite",
- "qbase",
+ "qbase 0.6.3",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "qevent"
+version = "0.6.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bytes",
+ "derive_builder",
+ "derive_more",
+ "enum_dispatch",
+ "pin-project-lite",
+ "qbase 0.6.4",
  "serde",
  "serde_json",
  "serde_with",
@@ -1923,11 +2086,33 @@ dependencies = [
  "derive_more",
  "futures",
  "http",
- "netdev",
+ "netdev 0.45.0",
  "parking_lot",
- "qbase",
- "qevent",
- "qudp",
+ "qbase 0.6.3",
+ "qevent 0.6.1",
+ "qudp 0.7.1",
+ "rustls",
+ "thiserror 2.0.19",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "qinterface"
+version = "0.7.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bytes",
+ "dashmap",
+ "derive_more",
+ "futures",
+ "http",
+ "netdev 0.46.3",
+ "parking_lot",
+ "qbase 0.6.4",
+ "qevent 0.6.2",
+ "qudp 0.7.2",
  "rustls",
  "thiserror 2.0.19",
  "tokio",
@@ -1946,6 +2131,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "qmacro"
+version = "0.5.1"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.2",
+]
+
+[[package]]
 name = "qrecovery"
 version = "0.6.1"
 source = "git+https://github.com/genmeta/dquic?tag=v0.7.1#207d0bc0f4f8d9e232de5b354df5ff918ae8cbf5"
@@ -1953,8 +2148,23 @@ dependencies = [
  "bytes",
  "derive_more",
  "futures",
- "qbase",
- "qevent",
+ "qbase 0.6.3",
+ "qevent 0.6.1",
+ "thiserror 2.0.19",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "qrecovery"
+version = "0.6.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bytes",
+ "derive_more",
+ "futures",
+ "qbase 0.6.4",
+ "qevent 0.6.2",
  "thiserror 2.0.19",
  "tokio",
  "tracing",
@@ -1967,7 +2177,18 @@ source = "git+https://github.com/genmeta/dquic?tag=v0.7.1#207d0bc0f4f8d9e232de5b
 dependencies = [
  "dns-lookup",
  "futures",
- "qbase",
+ "qbase 0.6.3",
+ "tokio",
+]
+
+[[package]]
+name = "qresolve"
+version = "0.8.1"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "dns-lookup",
+ "futures",
+ "qbase 0.6.4",
  "tokio",
 ]
 
@@ -1981,10 +2202,33 @@ dependencies = [
  "dashmap",
  "futures",
  "nom 8.0.0",
- "qbase",
- "qevent",
- "qinterface",
- "qresolve",
+ "qbase 0.6.3",
+ "qevent 0.6.1",
+ "qinterface 0.7.1",
+ "qresolve 0.8.0",
+ "rand",
+ "smallvec",
+ "snafu",
+ "thiserror 2.0.19",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "qtraversal"
+version = "0.7.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bon",
+ "bytes",
+ "dashmap",
+ "futures",
+ "nom 8.0.0",
+ "qbase 0.6.4",
+ "qevent 0.6.2",
+ "qinterface 0.7.2",
+ "qresolve 0.8.1",
  "rand",
  "smallvec",
  "snafu",
@@ -2003,7 +2247,23 @@ dependencies = [
  "cfg-if",
  "libc",
  "nix",
- "qbase",
+ "qbase 0.6.3",
+ "socket2",
+ "tokio",
+ "tracing",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "qudp"
+version = "0.7.2"
+source = "git+https://github.com/genmeta/dquic?tag=v0.7.2#30b381f419c5030c55519b673aa196e60ad6cdf9"
+dependencies = [
+ "bytes",
+ "cfg-if",
+ "libc",
+ "nix",
+ "qbase 0.6.4",
  "socket2",
  "tokio",
  "tracing",
@@ -2073,7 +2333,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2237,7 +2497,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2497,7 +2757,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2561,7 +2821,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3013,7 +3273,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3329,6 +3589,26 @@ checksum = "b5f6765e852b9b4dc8e2a76843e4d64d1cea8e79bcde0b6901aea8e7c7f08282"
 dependencies = [
  "bit-vec",
  "time",
+]
+
+[[package]]
+name = "zerocopy"
+version = "0.8.58"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c17e8fafad82b542ff3717217ecdc736231b59e387768c9630123b4ce4d2db44"
+dependencies = [
+ "zerocopy-derive",
+]
+
+[[package]]
+name = "zerocopy-derive"
+version = "0.8.58"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "595f56e044df4f46a0c9a626f65c3d99eb8488f7e8a8baa12dd76326d9710bf2"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]

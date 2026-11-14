@@ -25,10 +25,12 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 rcgen.workspace = true
-serial_test.workspace = true
 tonic.workspace = true
 tonic-prost.workspace = true
 prost.workspace = true
+
+[dev-dependencies]
+serial_test.workspace = true
 
 [build-dependencies]
 tonic-prost-build.workspace = true

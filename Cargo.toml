@@ -43,4 +43,3 @@ prost = "0.14"
 
 # crates in this workspace
 dquic-h3 = { version = "0.0.1", path = "dquic-h3" }
-ngtcp2-h3 = { version = "0.0.1", path = "ngtcp2-h3" }
